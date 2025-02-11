@@ -1,0 +1,53 @@
+---
+description: read event storming
+globs: 
+---
+# Event Storming Reading Guidelines
+
+**Purpose:**  
+To accurately interpret the event storming diagram by understanding the roles of each component and applying consistent rules for system behavior analysis.
+
+## Legend
+
+| Color           | Component              | Description & Examples                                                   |
+|-----------------|------------------------|--------------------------------------------------------------------------|
+| **Blue**        | Command                | Request for an action on the system<br>Example: Create Order, Add Item    |
+| **Orange**      | Event                  | Outcome or occurrence resulting from an action<br>Example: Order Confirmed, Item Discontinued |
+| **Purple**      | Policy                 | Trigger activated when conditions are met<br>Example: Update price every 10 minutes, Stop sale when stock is 0 |
+| **Dark Pink**   | External System        | Systems or dependencies outside the primary system<br>Example: Payment Gateway, Warehouse Management System |
+| **Red**         | Hotspot/Debate         | Critical discussion points or unresolved design issues<br>Example: Concurrency conflicts, Error handling design |
+| **Yellow**      | Constraint/Invariant   | Business rules or immutable conditions (e.g., aggregation rules)<br>Example: Maximum 10 items, Single order up to $10,000 |
+| **Light Green** | Read Model             | Internal state or aggregate model used by the system<br>Example: Order Aggregate, Product Entity |
+| **Green**       | View/Query             | Presentation of information to users or aggregates<br>Example: Product List View, Order History View |
+| **Gray**        | Data/Details           | Supplementary or attribute information<br>Example: Order Status, Product Details |
+| **Yellow**      | Actor                  | Role of a user or system<br>Example: Customer, Administrator, Automated Agent |
+
+## Reading Process
+
+1. **Start with Policies/Triggers:**  
+   Identify what triggers or policies initiate the process (e.g., "Update price every 10 minutes").
+
+2. **Identify Commands/Requests:**  
+   Determine which actions are executed as a result of the triggers (e.g., "Update Price").
+
+3. **Check the Events:**  
+   Recognize what events occur as a result of the commands (e.g., "Sales Price Changed").
+
+4. **Consider Constraints/Immutables:**  
+   Review any business rules or conditions that apply (e.g., "Order must be under $10,000").
+
+5. **Focus on Hotspots/Debates:**  
+   Pinpoint areas requiring further design discussion (e.g., concurrency handling, error processing).
+
+6. **Analyze the Read Models:**  
+   Understand the internal aggregates or entities managed by the system (e.g., Order Entity, Product Entity).
+
+7. **Assess External Systems:**  
+   Identify interactions with external systems (e.g., sending requests to a payment gateway).
+
+8. **Review Views/Queries:**  
+   Determine how information is presented to users (e.g., Order History View, Product List).
+
+9. **Organize Actor Relationships:**  
+   Clarify which actor interacts with which process (e.g., Customer confirms order).
+

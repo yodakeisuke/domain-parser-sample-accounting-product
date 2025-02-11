@@ -1,0 +1,43 @@
+---
+description: When creating or searching for files.
+globs: 
+---
+
+---
+
+## Key Guidelines
+
+1. **Language Consistency:**
+   - All instructions and code examples are in English for clarity and uniformity.
+
+2. **Subdomain Modularity:**
+   - The project is segmented by subdomains (e.g., product, order). Each subdomain contains its own models and flows.
+   - Within each subdomain:
+     - **Model Layer:**
+       - **Command:** Contains the business logic aggregates and repositories (including in-memory implementations).
+       - **Read Model:** Contains read models and query objects.
+       - **Type Definitions:** Holds domain-specific type definitions.
+     - **Flow Layer:**
+       - Manages process logic and error handling specific to the subdomain.
+
+3. **Common Components:**
+   - Shared code, such as common types and error definitions, are stored under the `common` directory to promote reuse across subdomains.
+
+4. **Scalability and Maintainability:**
+   - The structure is designed to scale. When adding new subdomains or functionality, maintain the same layout to ensure consistency.
+   - This separation of concerns simplifies code generation, testing, and maintenance.
+
+5. **Readability for LLM Models and Agents:**
+   - The clear, modular design ensures that each component's role is easily understood, facilitating automated code generation and integration.
+
+---
+
+## Usage Instructions
+
+- **Template Adoption:** Use this directory structure as a template when starting new projects. Ensure that each new subdomain follows the established layout.
+- **Code Generation:** When generating code, reference the specific sections (command, read model, flow, or common) to align with the architecture.
+- **Future Expansion:** Modify and extend the structure as needed while keeping the core principles of modularity and clarity intact.
+
+---
+
+This markdown document provides a comprehensive and easy-to-read guideline for setting up and maintaining the project's directory structure, ensuring effective collaboration with LLM models and coding agents.
