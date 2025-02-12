@@ -2,6 +2,37 @@
 description: When creating or searching for files.
 globs: 
 ---
+# AI Coding Agent: Project Directory Structure Instructions
+
+This document defines a modular project directory structure designed for clear separation of concerns and ease of use by LLM models and coding agents. All instructions and examples are provided in English for maximum readability.
+
+## Directory Structure Overview
+
+src/main/kotlin/
+├── {subdomain}/              # Each subdomain (e.g., product, order)
+│   ├── model/
+│   │   ├── command/
+│   │   │   └── {aggregate}/   # Each aggregate for the command model
+│   │   │       ├── Event.kt         # Event type definitions
+│   │   │       ├── Command.kt       # Command type definitions
+│   │   │       ├── Aggregate.kt     # Aggregate state and behavior
+│   │   │       ├── Repository.kt
+│   │   │       └── InMemoryRepository.kt
+│   │   ├── readmodel/
+│   │   │   ├── {Subdomain}ReadModel.kt
+│   │   │   └── {Subdomain}Query.kt
+│   │   └── type/
+│   │       └── {TypeDefinition}.kt
+│   └── flow/
+│       ├── {Subdomain}Process.kt
+│       └── error/
+│           └── {Subdomain}ProcessError.kt
+├── common/                   # Shared elements among subdomains
+│   ├── model/
+│   │   └── type/
+│   │       └── {CommonTypeDefinition}.kt
+│   └── error/
+│       └── {CommonError}.kt
 
 ---
 
@@ -14,7 +45,11 @@ globs:
    - The project is segmented by subdomains (e.g., product, order). Each subdomain contains its own models and flows.
    - Within each subdomain:
      - **Model Layer:**
-       - **Command:** Contains the business logic aggregates and repositories (including in-memory implementations).
+       - **Command:**
+         - `Event.kt`: Defines all possible events in the aggregate
+         - `Command.kt`: Defines all command types that can be executed
+         - `Aggregate.kt`: Contains aggregate state definitions and command handling logic
+         - Repository implementations for persistence
        - **Read Model:** Contains read models and query objects.
        - **Type Definitions:** Holds domain-specific type definitions.
      - **Flow Layer:**
