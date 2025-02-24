@@ -1,12 +1,13 @@
 package product.model.type
 
+import common.model.type.primitive.ID
 import common.model.type.primitive.NonEmptyString
 import common.model.type.primitive.PositiveInt
 
 sealed interface Product {
     val metaData: ProductMetaData
     data class ProductMetaData(
-        val productId: NonEmptyString,
+        val productId: ID<Product>,
         val name: NonEmptyString,
         val description: NonEmptyString,
         val category: NonEmptyString,

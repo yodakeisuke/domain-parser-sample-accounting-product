@@ -60,8 +60,8 @@ value class PositiveInt private constructor(val value: Int) {
     }
 }
 @JvmInline
-value class ID<T> private constructor(val value: T) {
+value class ID<T> private constructor(val value: NonEmptyString) {
     companion object {
-        fun <T> from(value: T): Result<ID<T>, NonEmptyString> = Ok(ID(value))
+        fun <T> from(value: NonEmptyString): ID<T> = ID(value)
     }
 }
