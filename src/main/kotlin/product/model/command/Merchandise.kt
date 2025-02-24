@@ -7,20 +7,20 @@ import product.model.type.Product
 import product.model.type.DisplayOrder
 import product.model.type.ProductNames
 import product.model.type.addToFront
-import common.model.type.primitive.PositiveInt
 
 
-// 集約
+// イベントのユニオンとそれに生えたコマンド の集合としての集約
 sealed interface Merchandise {
-    // それぞれの状態
+    // それぞれの状態(=イベント)
     data object Empty : Merchandise {
-        fun addProduct(
+        // この状態から許可された遷移アクション(=コマンド)
+        fun addProduct( // 商品追加
             metaData: Product.ProductMetaData,
             displayOrder: DisplayOrder,
             allProductNames: ProductNames
         ): Result<Open.Added, Open.MerchandiseError>
             = registerNewProduct(metaData, displayOrder, allProductNames)
-
+        // 入荷停止
         fun suspendStocking(reason: NonEmptyString): Suspended = Suspended(reason)
     }
 
