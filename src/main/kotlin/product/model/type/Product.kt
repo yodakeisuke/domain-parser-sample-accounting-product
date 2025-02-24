@@ -31,3 +31,5 @@ sealed interface Product {
         override val metaData: ProductMetaData,
     ) : Product
 }
+
+typealias ProductNames = Set<NonEmptyString>
