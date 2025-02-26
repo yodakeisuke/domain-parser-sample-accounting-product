@@ -14,15 +14,20 @@
 ## 3. State Transitions
 ```mermaid
 stateDiagram-v2
-    [*] --> ProductAdded: AddProduct
-    ProductAdded --> ProductUpdated: UpdateProduct
-    ProductUpdated --> ProductUpdated: UpdateProduct
-    ProductAdded --> ProductStoppedSelling: StopSelling
-    ProductUpdated --> ProductStoppedSelling: StopSelling
-    ProductAdded --> ProductReordered: ReorderProducts
-    ProductUpdated --> ProductReordered: ReorderProducts
-    ProductReordered --> ProductReordered: ReorderProducts
-    ProductReordered --> ProductStoppedSelling: StopSelling
+    [*] --> Empty
+    
+    Empty --> Open : addProduct
+    Empty --> Suspended : suspendStocking
+    
+    state Open {
+        Opened
+        Added
+        Updated
+    }
+    
+    Open --> Open : "addProduct, update"
+    Open --> Suspended : suspendStocking
+    Suspended --> Open : resumeStocking
 ```
 
 ## 4. Enforced Invariants & Corrective Policies

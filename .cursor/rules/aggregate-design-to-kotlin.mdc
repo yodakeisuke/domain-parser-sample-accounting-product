@@ -1,0 +1,188 @@
+---
+description: Guidelines for generating Kotlin code (aggregate code) from AggregateDesignCanvas
+globs: *.md,*.mdc
+---
+# Guidelines for Converting AggregateDesignCanvas to Kotlin Code
+
+## Overview
+
+AggregateDesignCanvas represents a conceptual design of an aggregate, and this guideline provides a framework for translating it into implementation code.
+
+In this approach, we express an aggregate as a "union type of events" where events themselves represent the aggregate states. This is a key concept: **events and states are essentially equivalent** in this implementation model.
+
+> **Important**: All sample code is illustrative and should be adjusted according to specific domain requirements and project conventions.
+
+## Basic Structure
+
+An aggregate consists of the following elements:
+
+1. **Aggregate Root Type**: A sealed interface/class representing a union type of all possible states/events
+   ```kotlin
+   sealed interface Merchandise { /* Each state/event is defined here */ }
+   ```
+
+2. **State/Event Classes**: Classes implementing the root type, representing both states and events
+   ```kotlin
+   data class Created(val id: String, val items: List<Item>) : OrderAggregate
+   data object Empty : Merchandise
+   ```
+
+3. **Command Methods**: Methods that execute business logic and return new state/event objects
+   ```kotlin
+   fun confirm(userId: String): Result<Confirmed, OrderError>
+   ```
+
+4. **Helper Functions**: Functions encapsulating state transition logic
+
+### Event = State Relationship
+
+In this implementation, events and states are essentially the same:
+
+- Each event represents a specific state of the aggregate
+- Command methods return new states, which are themselves events
+- The history of an aggregate is the sequence of events, each representing a state at a point in time
+
+Example:
+```kotlin
+// This class is both a state and an event
+data class Confirmed(
+    val id: String,
+    val items: List<OrderItem>,
+    val totalAmount: Money,
+    val confirmedAt: Instant,
+    val confirmedBy: UserId
+) : OrderAggregate
+
+// Command method returns the new state directly
+fun confirm(userId: UserId): Result<Confirmed, OrderError> {
+    // Validation logic...
+    return Result.success(
+        Confirmed(
+            id = this.id,
+            items = this.items,
+            totalAmount = this.totalAmount,
+            confirmedAt = Instant.now(),
+            confirmedBy = userId
+        )
+    )
+}
+```
+
+## "Contours" and "Framework" of Aggregates
+
+Key concepts in aggregate design:
+
+1. **Contours (Boundaries)**: Defined by invariants - the minimum unit where consistency must be maintained.
+2. **Framework**:
+   - Bundle of commands and resulting events
+   - Permitted state transitions and state-specific command restrictions
+
+## Naming and Conversion Process
+
+### Naming Conventions
+- **Commands**: Use verbs (`AddProduct`, not `ProductCommand`)
+- **States**: Use adjectives/past participles (`Added`, not `AddProduct`)
+- **Helper Functions**: Use domain terminology (`registerNewProduct`, not `updateState`)
+
+### Conversion Steps
+
+1. **Define the basic structure** from "Name" and "Description" sections
+   ```kotlin
+   sealed interface OrderAggregate { val id: String }
+   ```
+
+2. **Define state classes** from the state transition diagram
+   ```kotlin
+   data class Created(override val id: String, val items: List<OrderItem>) : OrderAggregate
+   data class Confirmed(override val id: String, val items: List<OrderItem>) : OrderAggregate
+   ```
+
+3. **Implement command methods** based on "Handled Commands & Created Events"
+   ```kotlin
+   fun confirm(userId: String): Result<Confirmed, OrderError> {
+       // Invariant checks...
+       return Result.success(Confirmed(id, items, totalAmount, Instant.now(), UserId(userId)))
+   }
+   ```
+
+## State Constraints and Invariants
+
+State transition constraints are expressed using the type system:
+
+```kotlin
+sealed interface Merchandise {
+    data object Empty : Merchandise {
+        fun addProduct(metaData: ProductMetaData): Result<Open.Added, ProductError>
+    }
+    sealed interface Open : Merchandise {
+        data class Added(val product: Product.OnSale) : Open
+        fun update(metaData: ProductMetaData): Result<Updated, ProductError>
+    }
+}
+```
+
+Invariants define aggregate boundaries and are implemented as validations in command methods:
+
+```kotlin
+fun addProduct(metaData: ProductMetaData): Result<Open.Added, ProductError> {
+    // Name uniqueness check
+    if (productNames.contains(metaData.name)) {
+        return Result.failure(ProductError.NameAlreadyExists(metaData.name))
+    }
+    // Maximum product count check
+    if (productNames.size >= 10) {
+        return Result.failure(ProductError.MaxProductsExceeded)
+    }
+    // State transition logic...
+}
+```
+
+### Value Objects
+Use value objects to express domain constraints:
+
+```kotlin
+@JvmInline
+value class NonEmptyString private constructor(val value: String) {
+    companion object {
+        fun of(value: String): Result<NonEmptyString, ValidationError> =
+            if (value.isNotBlank()) Result.success(NonEmptyString(value))
+            else Result.failure(ValidationError.EmptyString)
+    }
+}
+```
+
+## Orchestration and Implementation
+
+Aggregates return events, with result handling in the orchestration layer:
+
+```kotlin
+// Orchestration example
+fun addProductOrchestration(
+    request: AddProductRequest,
+    readProductNames: ReadProductNames,
+    saveMerchandise: SaveProduct
+): Result<ProductAdded, AddProductError> {
+    // Convert request...
+    val result = Empty.addProduct(productMetaData, displayOrder, productNames)
+
+    return result.map { newState ->
+        saveMerchandise(newState)
+        ProductAdded(newState)
+    }.mapError { AddProductError.DomainError(it) }
+}
+```
+
+## Best Practices and Notes
+
+1. **Aggregate boundaries are determined by invariants** - Keep aggregates as small as possible
+2. **Define state-specific properties only in their respective state classes**
+3. **Validate invariants early** in command methods
+4. **Use Result types for error handling**
+5. **Express constraints with value objects** instead of primitive types
+6. **Keep aggregates focused on pure domain logic**
+
+**Important notes:**
+- This guideline generates the "framework" of an aggregate, not complete code
+- Event storming alone doesn't provide all details needed - additional design work is necessary
+- Prefer minimal states to maintain code understandability
+- Choose the most expressive model for your specific domain rather than mechanically applying patterns

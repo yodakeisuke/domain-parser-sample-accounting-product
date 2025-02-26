@@ -1,6 +1,7 @@
 ---
 description: always.
 globs: 
+alwaysApply: false
 ---
 ## Behavioral Guidelines
 
