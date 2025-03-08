@@ -4,9 +4,9 @@ import com.github.michaelbull.result.mapBoth
 import product.flow.AddProductError
 import product.flow.AddProductRequest
 import product.flow.addProductOrchestration
-import product.model.command.merchandise.SaveProduct
 import product.model.readmodel.allProductNames
 import product.model.readmodel.allDisplayOrders
+
 
 data class HttpResponse<T>(
     val status: Int,
@@ -35,7 +35,8 @@ fun addProduct(
         // 依存性注入
         readProductNames = allProductNames,
         readDisplayOrder = allDisplayOrders,
-        saveMerchandise = inMemorySaveProduct
+        saveMerchandise = inMemorySaveProduct,
+        restoreMerchandiseState = inMemoryRestoreMerchandiseState
     ).mapBoth(
         success = { added ->
             HttpResponse(

@@ -49,6 +49,10 @@ sealed interface Merchandise {
                 val productId: ID<Product>,
                 val message: String
             ) : MerchandiseError
+
+            data class OperationNotAllowed(
+                val message: String
+            ) : MerchandiseError
         }
 
         fun addProduct(

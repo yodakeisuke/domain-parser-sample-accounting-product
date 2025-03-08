@@ -8,6 +8,8 @@ import product.model.type.Product
 import product.model.readmodel.ReadProductNames
 import product.model.readmodel.ReadDisplayOrders
 import product.model.command.merchandise.SaveProduct
+import product.model.type.DisplayOrder
+import product.model.type.ProductNames
 import java.util.*
 
 /**
@@ -24,6 +26,8 @@ fun addProductOrchestration(
     readDisplayOrder: ReadDisplayOrders,
     // リポジトリ
     saveMerchandise: SaveProduct,
+    // 現在のMerchandise状態を取得するためのリポジトリ関数を追加
+    restoreMerchandiseState: () -> Merchandise,
 ): Result<Merchandise.Open.Added, AddProductError> = binding {
     // リクエストスキーマ -> ドメインモデル
     val productMetaData = request.toProductMetaData().mapError { AddProductError.InvalidRequest(it) }.bind()
@@ -32,9 +36,12 @@ fun addProductOrchestration(
     val productNames = readProductNames()
     val displayOrder = readDisplayOrder()
     
-    // 集約に対するコマンドの実行
-    val productAdded = Merchandise.Empty
-        .addProduct(
+    // 現在のMerchandise集約の状態を取得
+    val currentMerchandise = restoreMerchandiseState()
+    
+    // 現在の状態に応じたコマンド実行
+    val productAdded = currentMerchandise
+        .tryAddProduct(
             metaData = productMetaData,
             displayOrder = displayOrder,
             allProductNames = productNames
@@ -46,6 +53,24 @@ fun addProductOrchestration(
     saveMerchandise(pushedEvent.product, pushedEvent.displayOrder)
 
     pushedEvent
+}
+
+// Merchandiseの拡張関数として実装
+private fun Merchandise.tryAddProduct(
+    metaData: Product.ProductMetaData,
+    displayOrder: DisplayOrder,
+    allProductNames: ProductNames
+): Result<Merchandise.Open.Added, Merchandise.Open.MerchandiseError> {
+    return when (this) {
+        is Merchandise.Empty -> addProduct(metaData, displayOrder, allProductNames)
+        is Merchandise.Open -> addProduct(metaData, displayOrder, allProductNames)
+        is Merchandise.Suspended -> {
+            // 入荷停止中は商品の追加ができないためエラーを返す
+            Err(Merchandise.Open.MerchandiseError.OperationNotAllowed(
+                "商品の追加ができません。システムは現在入荷停止中です: ${this.reason}"
+            ))
+        }
+    }
 }
 
 /**
@@ -77,6 +102,7 @@ data class AddProductRequest(
         )
     }
 }
+
 sealed interface AddProductError {
     data class InvalidRequest(val message: String) : AddProductError
     data class DomainError(val error: Merchandise.Open.MerchandiseError) : AddProductError
