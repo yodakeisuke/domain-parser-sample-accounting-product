@@ -1,0 +1,29 @@
+---
+description: always.
+globs: 
+alwaysApply: false
+---
+
+code_style:
+  functional_style:  "純粋関数＋不変データ。クラス思考は完全に排除"
+  error_handling:
+      - "例外を使わず Result 型パターンで表現"
+      - "ライブラリ**kotlin-result**を使用"
+  pipeline: "常に関数の合成として表現（**kotlin-result**を使用し、常に逐次合成か並列合成を行う）"
+  abstraction:  "パラメトリシティによる抽象化を徹底"
+  polymorphism: "データ型駆動の振る舞いを DSL インタプリタ内で記述"
+  encapsulation: "publicにする関数・data class は最小限となるように設計する"
+  keep_green: "ビルドエラーがないことを確認してから、作業完了を報告せよ"
+  business_rule: |
+    - "１つのビジネスルールは１つの関数で表現されなければならない"
+    - "ビジネスルールの逐次合成(monadic)と並列合成(applicative)で複合的なビジネスルールが表現される"
+  encode_domain_knowledge: |
+    - "手続きの散文は書くことは明確に禁止する"
+    - "絶対にドメイン知識の宣言としてのコードを書け"
+  constraints:
+    - "可読性向上のためのコメント追加は行わず、型と構造で知識を表現する"
+    - "常にクリーンであること。使用されていなかったり実質的に意味のないコードが常に存在していない状態でなければならないということ"
+    - ""`arrow.ts`は使用不可"
+mindset:
+    - "Encode any incidental complexity and you are fired"
+    - "自分で完遂できることは自分で完遂し、ユーザへ質問すべきことはユーザへ質問する"
