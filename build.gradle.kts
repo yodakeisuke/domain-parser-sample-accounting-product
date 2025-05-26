@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.1.10"
+    application
 }
 
 group = "com.example"
@@ -22,10 +23,14 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5:5.8.1")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
     useJUnitPlatform()
 }
 
 kotlin {
     jvmToolchain(17)
-} 
+}
+
+application {
+    mainClass.set("TestRunnerKt")
+}

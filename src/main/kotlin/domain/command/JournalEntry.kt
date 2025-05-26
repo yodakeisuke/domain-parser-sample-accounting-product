@@ -69,6 +69,18 @@ internal fun requireMinimumTwoLines(
         Err("Journal entry must have at least 2 lines (current: ${lines.size})")
     }
 
+internal fun requireExistingAccounts(
+    lines: List<JournalLine>,
+    findAccount: (common.primitive.NonEmptyString) -> Result<domain.term.accounting.Account, String>
+): Result<List<JournalLine>, String> {
+    lines.forEach { line ->
+        findAccount(line.account.code).onFailure { error ->
+            return Err("無効な科目が指定されました: ${error}")
+        }
+    }
+    return Ok(lines)
+}
+
 internal fun requireBalancedEntry(
     lines: List<JournalLine>,
 ): Result<List<JournalLine>, String> {
