@@ -3,7 +3,6 @@ package domain.command.journal_entry
 import com.github.michaelbull.result.*
 import domain.term.journal_data.JournalHeader
 import domain.term.journal_data.JournalLine
-import domain.term.accounting.DebitCredit
 import common.primitive.ID
 
 // aggregate
