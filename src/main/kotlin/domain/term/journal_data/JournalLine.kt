@@ -4,7 +4,7 @@ import domain.term.accounting.Account
 import domain.term.accounting.AccountingAmount
 import domain.term.accounting.AccountType
 import domain.term.accounting.DebitCredit
-import domain.term.accounting.denormalizeSign
+import domain.term.accounting.SignNormalization
 import java.math.BigDecimal
 
 data class JournalLine(
@@ -45,7 +45,7 @@ internal fun filterUnsignedByDebitCredit(
         when (val amount = line.amount) {
             is AccountingAmount.Unsigned ->
                 amount.takeIf { it.debitCredit == targetType }?.amount?.value
-            is AccountingAmount.Signed -> amount.toUnsigned(line.account.type, ::denormalizeSign)
+            is AccountingAmount.Signed -> amount.toUnsigned(line.account.type, SignNormalization::denormalize)
                 .takeIf { it.debitCredit == targetType }?.amount?.value
         }
     }

@@ -1,4 +1,4 @@
-package effect
+package effect.rdb
 
 import com.github.michaelbull.result.*
 import domain.command.journal_entry.JournalEntry

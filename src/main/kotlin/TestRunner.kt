@@ -5,7 +5,7 @@ import domain.read.AccountList
 import domain.term.accounting.*
 import domain.term.journal_data.JournalHeader
 import domain.term.journal_data.JournalLine
-import effect.*
+import effect.rdb.*
 import workflow.*
 import java.math.BigDecimal
 import java.time.LocalDate

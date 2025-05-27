@@ -2,7 +2,7 @@ package domain.read.pl
 
 import domain.term.journal_data.JournalLine
 import domain.term.accounting.AccountType
-import domain.term.accounting.normalizeSign
+import domain.term.accounting.SignNormalization
 import java.math.BigDecimal
 
 data class PL(
@@ -43,7 +43,7 @@ data class AccountBalance(
         ): List<AccountBalance> {
             return journalLines
                 .filter { it.account.type == accountType }
-                .let { JournalLine.aggregateByAccount(it, ::normalizeSign) }
+                .let { JournalLine.aggregateByAccount(it, SignNormalization::normalize) }
                 .map { (account, balance) ->
                     AccountBalance(
                         accountCode = account.code.value,
