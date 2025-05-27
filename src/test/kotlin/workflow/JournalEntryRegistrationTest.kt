@@ -8,7 +8,8 @@ import domain.term.accounting.*
 import domain.term.journal_data.JournalHeader
 import domain.term.journal_data.JournalLine
 import domain.read.AccountList
-import effect.*
+import effect.rdb.JournalEntrySnapshot
+import effect.rdb.JournalEntryStatus
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -21,7 +22,7 @@ class JournalEntryRegistrationTest {
 
     @BeforeEach
     fun setup() {
-        clearEventStore()
+        JournalEntrySnapshot.clear()
     }
 
     @Test
@@ -50,7 +51,10 @@ class JournalEntryRegistrationTest {
         )
 
         // 関数を渡してワークフローを実行
-        val result = registerJournalEntry(AccountList::findByCode, ::saveJournalEvent, request)
+        val saveEvent: (JournalEntry) -> Result<JournalEntry, String> = { event ->
+            JournalEntrySnapshot.save(event).map { event }
+        }
+        val result = registerJournalEntry(AccountList::findByCode, saveEvent, request)
 
         // 成功を確認
         assertTrue(result.isOk)
@@ -58,11 +62,13 @@ class JournalEntryRegistrationTest {
         assertEquals(journalId, event.header.id)
         assertEquals(2, event.lines.size)
 
-        // 保存されたイベントを確認
-        val savedEvents = findJournalEvents(journalId)
-        assertTrue(savedEvents.isOk)
-        val events = savedEvents.component1()!!
-        assertEquals(1, events.size)
+        // 保存されたスナップショットを確認
+        val savedSnapshot = JournalEntrySnapshot.findById(journalId)
+        assertTrue(savedSnapshot.isOk)
+        val snapshot = savedSnapshot.component1()!!
+        assertEquals(journalId, snapshot.id)
+        assertEquals(JournalEntryStatus.REGISTERED, snapshot.status)
+        assertEquals(1, snapshot.version)
     }
 
     @Test
@@ -94,7 +100,10 @@ class JournalEntryRegistrationTest {
             )
         )
 
-        val result = registerJournalEntry(AccountList::findByCode, ::saveJournalEvent, request)
+        val saveEvent: (JournalEntry) -> Result<JournalEntry, String> = { event ->
+            JournalEntrySnapshot.save(event).map { event }
+        }
+        val result = registerJournalEntry(AccountList::findByCode, saveEvent, request)
 
         // エラーを確認
         assertTrue(result.isErr)
@@ -122,7 +131,10 @@ class JournalEntryRegistrationTest {
             )
         )
 
-        val result = registerJournalEntry(AccountList::findByCode, ::saveJournalEvent, request)
+        val saveEvent: (JournalEntry) -> Result<JournalEntry, String> = { event ->
+            JournalEntrySnapshot.save(event).map { event }
+        }
+        val result = registerJournalEntry(AccountList::findByCode, saveEvent, request)
 
         // エラーを確認
         assertTrue(result.isErr)
@@ -153,7 +165,10 @@ class JournalEntryRegistrationTest {
             )
         )
 
-        val result = registerJournalEntry(AccountList::findByCode, ::saveJournalEvent, request)
+        val saveEvent: (JournalEntry) -> Result<JournalEntry, String> = { event ->
+            JournalEntrySnapshot.save(event).map { event }
+        }
+        val result = registerJournalEntry(AccountList::findByCode, saveEvent, request)
 
         // エラーを確認
         assertTrue(result.isErr)

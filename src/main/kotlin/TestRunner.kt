@@ -5,7 +5,8 @@ import domain.read.AccountList
 import domain.term.accounting.*
 import domain.term.journal_data.JournalHeader
 import domain.term.journal_data.JournalLine
-import effect.rdb.*
+import effect.rdb.JournalEntrySnapshot
+import domain.command.journal_entry.JournalEntry
 import workflow.*
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -57,7 +58,10 @@ fun testValidJournalEntry() {
         )
     )
     
-    val result = registerJournalEntry(AccountList::findByCode, ::saveJournalEvent, request)
+    val saveEvent: (JournalEntry) -> Result<JournalEntry, String> = { event ->
+        JournalEntrySnapshot.save(event).map { event }
+    }
+    val result = registerJournalEntry(AccountList::findByCode, saveEvent, request)
     result.fold(
         success = { event -> println("✅ 成功: 仕訳が登録されました (ID: ${event.header.id.value})") },
         failure = { error -> println("❌ エラー: $error") }
@@ -94,7 +98,10 @@ fun testNonExistentAccount() {
         )
     )
     
-    val result = registerJournalEntry(AccountList::findByCode, ::saveJournalEvent, request)
+    val saveEvent: (JournalEntry) -> Result<JournalEntry, String> = { event ->
+        JournalEntrySnapshot.save(event).map { event }
+    }
+    val result = registerJournalEntry(AccountList::findByCode, saveEvent, request)
     result.fold(
         success = { println("❌ エラー: 存在しない科目でも登録できてしまいました") },
         failure = { error -> 
@@ -144,7 +151,10 @@ fun testUnbalancedEntry() {
         )
     )
     
-    val result = registerJournalEntry(AccountList::findByCode, ::saveJournalEvent, request)
+    val saveEvent: (JournalEntry) -> Result<JournalEntry, String> = { event ->
+        JournalEntrySnapshot.save(event).map { event }
+    }
+    val result = registerJournalEntry(AccountList::findByCode, saveEvent, request)
     result.fold(
         success = { println("❌ エラー: 貸借不一致でも登録できてしまいました") },
         failure = { error -> 
