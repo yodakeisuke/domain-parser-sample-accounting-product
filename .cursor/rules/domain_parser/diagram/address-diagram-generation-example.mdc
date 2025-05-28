@@ -1,0 +1,141 @@
+---
+description: Example of generating diagram from Address.kt code
+globs: Address.kt, Address-diagram.md
+---
+# Address Diagram Generation Example
+
+## Input: Address.kt Code
+
+```kotlin
+package domain_order.address
+
+import com.github.michaelbull.result.*
+import common.app_core.Showable
+
+// property
+@JvmInline
+value class DetailedAddress(val value: String)
+
+// value
+sealed class Address: Showable {
+    sealed class Valid : Address() {
+        data class Domestic(
+            val prefecture: Prefecture,
+            val detail: DetailedAddress
+        ) : Valid()
+
+        data class Overseas(
+            val detail: DetailedAddress
+        ) : Valid()
+    }
+
+    data class Invalid(
+        val prefecture: Prefecture?,
+        val detail: DetailedAddress,
+        val reason: String,
+    ) : Address()
+
+    // transition
+    companion object {
+        fun verify(address: Address, inputPrefecture: Prefecture?): Valid
+        fun from(prefectureInput: String?, detailInput: String): Result<Address, String>
+    }
+}
+```
+
+## Parsing Process
+
+### Step 1: Identify Type Hierarchy
+```
+Address (sealed class)
+├── Valid (sealed class)
+│   ├── Domestic (data class)
+│   └── Overseas (data class)
+└── Invalid (data class)
+```
+
+### Step 2: Extract Properties
+- Domestic: prefecture (Prefecture), detail (DetailedAddress)
+- Overseas: detail (DetailedAddress)
+- Invalid: prefecture (Prefecture?), detail (DetailedAddress), reason (String)
+
+### Step 3: Identify Functions
+- from: (String?, String) → Result<Address, String>
+- verify: (Address, Prefecture?) → Valid
+
+### Step 4: Determine Relationships
+- Input type for 'from': String × String?
+- State transition: Invalid → Valid (via verify)
+- Composition: each type "has" its properties
+
+## Output: Generated Diagram
+
+```markdown
+# 住所（Address）ドメインの可換図式
+
+```mermaid
+graph TD
+    %% 入力
+    Input["String × String?"]
+    
+    %% トップレベル
+    Address["Address"]
+    
+    %% Address のサブ圏
+    subgraph Address_Space["Address = Valid + Invalid"]
+        subgraph Valid_Space["Valid = Domestic + Overseas"]
+            Domestic["Domestic"]
+            Overseas["Overseas"]
+        end
+        Invalid["Invalid"]
+    end
+    
+    %% 基本的な射
+    Input -->|"from"| Address
+    
+    %% 状態遷移
+    Invalid -->|"verify"| Valid_Space
+    
+    %% 構成要素
+    Domestic -->|"has"| Pref["Prefecture"]
+    Domestic -->|"has"| DA1["DetailedAddress"]
+    Overseas -->|"has"| DA2["DetailedAddress"]
+    Invalid -->|"has"| DA3["DetailedAddress"]
+    Invalid -->|"has?"| PrefOpt["Prefecture?"]
+    Invalid -->|"has"| Reason["String (reason)"]
+    
+    style Valid_Space fill:#90EE90
+    style Invalid fill:#FFB6C1  
+    style Domestic fill:#87CEEB
+    style Overseas fill:#DDA0DD
+```
+```
+
+## Key Parsing Insights
+
+### 1. Nested Sealed Classes → Nested Subgraphs
+The nested structure `Address > Valid > (Domestic, Overseas)` is represented as nested subgraphs in mermaid.
+
+### 2. Data Class Properties → "has" Relationships
+Each property in a data class becomes a "has" arrow. Nullable properties use "has?" notation.
+
+### 3. Companion Object Functions → Morphisms
+- `from` function: creates arrow from Input to Address
+- `verify` function: creates arrow from Invalid to Valid
+
+### 4. Sum Type Notation
+- Address = Valid + Invalid
+- Valid = Domestic + Overseas
+
+### 5. Styling Based on Semantics
+- Valid states: green (#90EE90)
+- Invalid state: red (#FFB6C1)
+- Specific types: custom colors for distinction
+
+## Automation Possibilities
+
+This parsing could be automated by:
+1. Using Kotlin reflection or parsing libraries to extract class structure
+2. Analyzing constructor parameters to generate "has" relationships
+3. Parsing companion object to identify morphisms
+4. Applying predefined color schemes based on naming patterns

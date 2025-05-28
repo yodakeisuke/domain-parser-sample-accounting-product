@@ -1,0 +1,131 @@
+---
+description: Template for generating domain diagrams from Kotlin code
+globs: *.kt
+---
+# Diagram Generation Template
+
+## Input: Domain Kotlin Code Structure
+
+```kotlin
+package domain_[name]
+
+// Value classes
+@JvmInline
+value class ValueType(val value: BaseType)
+
+// Main domain type
+sealed class DomainType {
+    // Nested sealed classes for sub-categories
+    sealed class SubCategory : DomainType() {
+        data class ConcreteType1(
+            val property1: Type1,
+            val property2: Type2
+        ) : SubCategory()
+        
+        data class ConcreteType2(
+            val property3: Type3
+        ) : SubCategory()
+    }
+    
+    // Direct subtypes
+    data class AnotherType(
+        val property4: Type4?,
+        val property5: Type5
+    ) : DomainType()
+    
+    // Functions
+    companion object {
+        fun create(input1: InputType1, input2: InputType2): Result<DomainType, Error>
+        fun transform(from: StateA): StateB
+    }
+}
+```
+
+## Output: Mermaid Diagram Template
+
+```markdown
+# [DomainType] Domain Diagram
+
+```mermaid
+graph TD
+    %% Input types
+    Input["InputType1 × InputType2"]
+    
+    %% Top-level domain type
+    DomainType["DomainType"]
+    
+    %% Domain structure with nested subgraphs
+    subgraph DomainType_Space["DomainType = SubCategory + AnotherType"]
+        subgraph SubCategory_Space["SubCategory = ConcreteType1 + ConcreteType2"]
+            ConcreteType1["ConcreteType1"]
+            ConcreteType2["ConcreteType2"]
+        end
+        AnotherType["AnotherType"]
+    end
+    
+    %% Functions as morphisms
+    Input -->|"create"| DomainType
+    
+    %% State transitions
+    StateA -->|"transform"| StateB
+    
+    %% Composition relationships
+    ConcreteType1 -->|"has"| Type1
+    ConcreteType1 -->|"has"| Type2
+    ConcreteType2 -->|"has"| Type3
+    AnotherType -->|"has?"| Type4
+    AnotherType -->|"has"| Type5
+    
+    %% Styling
+    style SubCategory_Space fill:#90EE90
+    style AnotherType fill:#FFB6C1
+    style ConcreteType1 fill:#87CEEB
+    style ConcreteType2 fill:#DDA0DD
+```
+```
+
+## Generation Rules
+
+### 1. Package and Class Name
+- Extract domain name from package
+- Use class name as diagram title
+
+### 2. Type Hierarchy Mapping
+```
+sealed class X          →  subgraph X_Space["X = ..."]
+├── sealed class Y : X  →    subgraph Y_Space["Y = ..."]
+│   ├── data class Z    →      Z["Z"]
+│   └── data class W    →      W["W"]
+└── data class V : X    →    V["V"]
+```
+
+### 3. Property Mapping
+```
+val required: Type      →  Parent -->|"has"| Type
+val optional: Type?     →  Parent -->|"has?"| Type
+```
+
+### 4. Function Mapping
+```
+fun f(a: A, b: B): C    →  Input["A × B"] -->|"f"| C
+fun g(x: X): Y          →  X -->|"g"| Y
+```
+
+### 5. Color Scheme
+- Valid/Success states: `#90EE90` (light green)
+- Invalid/Error states: `#FFB6C1` (light red)
+- Primary types: `#87CEEB` (light blue)
+- Secondary types: `#DDA0DD` (plum)
+- Neutral: `#F0F0F0` (light gray)
+
+## Checklist for Generation
+
+- [ ] Identify all sealed classes and their hierarchy
+- [ ] Map nested sealed classes to nested subgraphs
+- [ ] Extract all data class properties
+- [ ] Identify companion object functions
+- [ ] Determine input/output relationships
+- [ ] Apply appropriate styling
+- [ ] Add sum type notation (Type = A + B)
+- [ ] Include product type notation (A × B) for multiple parameters
+- [ ] Mark optional relationships with "?"

@@ -1,0 +1,183 @@
+---
+description: Guidelines for generating mermaid diagrams from Kotlin domain code
+globs: *.kt
+---
+# Code to Diagram Parser Guidelines
+
+## Overview
+This guideline defines how to analyze Kotlin domain code and generate mermaid diagrams that represent the domain structure as commutative diagrams.
+
+## Parsing Strategy
+
+### 1. Identify Domain Structure
+
+#### Sealed Class Hierarchy → Nested Subgraphs
+```kotlin
+sealed class Address {
+    sealed class Valid : Address() {
+        data class Domestic(...) : Valid()
+        data class Overseas(...) : Valid()
+    }
+    data class Invalid(...) : Address()
+}
+```
+
+→ 
+
+```mermaid
+subgraph Address_Space["Address = Valid + Invalid"]
+    subgraph Valid_Space["Valid = Domestic + Overseas"]
+        Domestic["Domestic"]
+        Overseas["Overseas"]
+    end
+    Invalid["Invalid"]
+end
+```
+
+### 2. Extract Relationships
+
+#### Constructor Parameters → "has" Arrows
+```kotlin
+data class Domestic(
+    val prefecture: Prefecture,
+    val detail: DetailedAddress
+) : Valid()
+```
+
+→
+
+```mermaid
+Domestic -->|"has"| Prefecture
+Domestic -->|"has"| DetailedAddress
+```
+
+#### Nullable Parameters → "has?" Arrows
+```kotlin
+data class Invalid(
+    val prefecture: Prefecture?,
+    val detail: DetailedAddress,
+    val reason: String
+) : Address()
+```
+
+→
+
+```mermaid
+Invalid -->|"has?"| Prefecture?
+Invalid -->|"has"| DetailedAddress
+Invalid -->|"has"| String
+```
+
+### 3. Identify Functions as Morphisms
+
+#### Companion Object Functions → Input/Output Arrows
+```kotlin
+companion object {
+    fun from(prefectureInput: String?, detailInput: String): Result<Address, String>
+    fun verify(address: Address, inputPrefecture: Prefecture?): Valid
+}
+```
+
+→
+
+```mermaid
+Input["String × String?"] -->|"from"| Address
+Invalid -->|"verify"| Valid_Space
+```
+
+### 4. Color Coding Convention
+
+- Valid states: `#90EE90` (light green)
+- Invalid states: `#FFB6C1` (light red)
+- Specific classifications: Custom colors
+  - Domestic: `#87CEEB` (light blue)
+  - Overseas: `#DDA0DD` (plum)
+
+## Diagram Structure Template
+
+```mermaid
+graph TD
+    %% Input types (from function parameters)
+    Input["InputType1 × InputType2"]
+    
+    %% Top-level type
+    RootType["RootType"]
+    
+    %% Nested structure with subgraphs
+    subgraph RootType_Space["RootType = SubType1 + SubType2"]
+        subgraph SubType1_Space["SubType1 = ..."]
+            %% Nested types
+        end
+        SubType2["SubType2"]
+    end
+    
+    %% Functions as morphisms
+    Input -->|"functionName"| RootType
+    
+    %% State transitions
+    StateA -->|"transition"| StateB
+    
+    %% Composition relationships
+    Type -->|"has"| Component
+    Type -->|"has?"| OptionalComponent
+    
+    %% Styling
+    style SubType1_Space fill:#color1
+    style SubType2 fill:#color2
+```
+
+## Parsing Rules
+
+### 1. Type Hierarchy Rules
+- `sealed class/interface` → Create subgraph with sum type notation
+- `data class extending sealed` → Add to parent subgraph
+- Nested sealed classes → Create nested subgraphs
+
+### 2. Relationship Rules
+- Constructor parameters → "has" relationships
+- Nullable types → "has?" relationships
+- Function parameters → Input types (use × for multiple parameters)
+- Function return types → Output types
+
+### 3. Morphism Rules
+- `companion object` functions → Top-level morphisms
+- State transition functions → Arrows between states
+- Functions with specific input types → Constrained morphisms
+
+### 4. Naming Conventions
+- Use type names directly from code
+- For sum types: "TypeName = Type1 + Type2"
+- For product types: "Type1 × Type2"
+- For optional types: append "?"
+
+## Implementation Steps
+
+1. **Parse sealed class hierarchy** to identify the domain structure
+2. **Extract data class properties** to identify "has" relationships
+3. **Analyze companion object functions** to identify morphisms
+4. **Determine state transitions** from function signatures
+5. **Apply styling** based on semantic meaning
+6. **Generate mermaid syntax** following the template
+
+## Example Patterns
+
+### Pattern 1: Sum Type with Nested Structure
+```kotlin
+sealed class X {
+    sealed class Y : X() {
+        data class Z(...) : Y()
+    }
+}
+```
+
+### Pattern 2: State Transition
+```kotlin
+fun verify(invalid: Invalid): Valid
+```
+
+### Pattern 3: Constructor Injection
+```kotlin
+fun from(input1: Type1, input2: Type2): Result<Output, Error>
+```
+
+These patterns help identify the categorical structure in the domain code.
