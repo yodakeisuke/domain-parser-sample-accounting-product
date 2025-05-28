@@ -1,0 +1,109 @@
+---
+description: Guidelines for generating Kotlin code (aggregate code) from AggregateDesignCanvas
+globs: *.md,*.mdc
+---
+# Guidelines for Converting AggregateDesignCanvas to Kotlin Code
+
+## Overview
+
+AggregateDesignCanvas represents a conceptual design of an aggregate, and this guideline provides a framework for translating it into implementation code.
+In this approach, we express an aggregate as a "union type of events" where events themselves represent the aggregate states. This is a key concept: **events and states are essentially equivalent** in this implementation model.
+
+## Quick Start
+
+- **Empty Template**: [aggregate-kotlin-template.mdc](aggregate-kotlin-template.mdc) - Use this as a starting point
+- **Complete Example**: [aggregate-kotlin-sample-journalentry.mdc](aggregate-kotlin-sample-journalentry.mdc) - See a full conversion example
+
+## Core Concepts
+
+### Event = State Principle
+
+In this implementation model:
+- Each event represents a specific state of the aggregate
+- Command methods return new states, which are themselves events
+- The history of an aggregate is the sequence of events, each representing a state at a point in time
+
+### Basic Structure
+
+An aggregate consists of four key elements:
+
+1. **Aggregate Root Type**: Sealed interface representing all possible states/events
+2. **State/Event Classes**: Data classes implementing the root type
+3. **Command Methods**: Static methods in companion object returning Result types
+4. **Business Rules**: Pure validation functions enforcing invariants
+
+## Conversion Process
+
+### Step 1: Analyze the Canvas
+
+From your Aggregate Design Canvas, identify:
+- **Name** (Section 1) → Aggregate root interface name
+- **State Transitions** (Section 3) → State constraints and allowed transitions
+- **Invariants** (Section 4) → Validation functions
+- **Commands & Events** (Section 5) → Methods and event classes
+
+### Step 2: Define the Structure
+
+1. Create the aggregate root as a sealed interface
+2. Define event classes for each "Created Event" from the canvas
+3. Add command methods for each "Handled Command"
+4. Implement validation functions for each invariant
+
+### Step 3: Implement State Constraints
+
+Enforce state transitions through:
+- **Type constraints**: Commands accept specific state types as parameters
+- **Method availability**: Only define transitions allowed by the diagram
+- **Validation logic**: Return errors for invalid transitions
+
+## Key Patterns
+
+### Naming Conventions
+- **Commands**: Use verbs (`register`, `approve`, not `RegisterCommand`)
+- **Events**: Use past participles (`Registered`, `Approved`, not `Register`)
+- **Validation functions**: Use domain terminology (`requireBalancedEntry`, not `validateBalance`)
+
+### Error Handling
+- All commands return `Result<Event, Error>` for explicit error handling
+- Define domain-specific error types as sealed interfaces
+- Transform validation errors into domain errors using `mapError`
+
+### Validation Composition
+- Chain validations using `andThen` for sequential checks
+- Use `Result` monad operations for clean error propagation
+- Keep validation functions pure and testable
+
+## Integration with Workflows
+
+Aggregates return events, which are then persisted by the workflow layer:
+
+```kotlin
+fun registerJournalEntry(
+    saveEvent: (JournalEntry) -> Result<JournalEntry, String>,
+    request: RegisterJournalEntryRequest
+): Result<JournalEntry.Registered, JournalEntryRegistrationError> {
+    return JournalEntry.register(request.header, request.lines)
+        .mapError { ValidationFailed(it.reason) }
+        .andThen { event ->
+            saveEvent(event)
+                .mapError { SaveFailed(it) }
+                .map { it as JournalEntry.Registered }
+        }
+}
+```
+
+## Best Practices
+
+1. **Aggregate boundaries are determined by invariants** - Keep aggregates as small as possible
+2. **Events contain all necessary data** - Each event must be self-contained for reconstruction
+3. **Commands are static methods** - Follow functional programming principles
+4. **State transitions enforced by types** - Use the type system to prevent invalid transitions
+5. **Use Result types for fallible operations** - Explicit error handling without exceptions
+6. **Business rules as pure functions** - Testable and composable validation logic
+
+## Important Notes
+
+- The canvas provides the structure; implementation details come from domain knowledge
+- Keep aggregates focused on enforcing invariants, not orchestration
+- Prefer minimal states to maintain code understandability
+- Choose the most expressive model for your specific domain rather than mechanically applying patterns

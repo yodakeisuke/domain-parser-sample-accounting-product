@@ -1,4 +1,4 @@
-package domain.term.accounting
+package domain_accounting.term.accounting
 
 object SignNormalization {
     fun normalize(

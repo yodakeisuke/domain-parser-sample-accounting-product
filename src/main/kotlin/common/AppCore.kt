@@ -16,3 +16,6 @@ data class Env(
     val userId: String,
 )
 
+interface Showable {
+    fun display(): String
+}

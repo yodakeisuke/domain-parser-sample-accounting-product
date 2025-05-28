@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-This is a Kotlin JVM project implementing an accounting domain using Domain-Driven Design principles with a functional programming paradigm.
+This is a Kotlin JVM project implementing an accounting domain_accounting using Domain-Driven Design principles with a functional programming paradigm.
 
 ## Build & Development Commands
 
@@ -30,14 +30,14 @@ This is a Kotlin JVM project implementing an accounting domain using Domain-Driv
 ## Architecture
 
 ### Domain Structure
-The domain is organized in three layers under `src/main/kotlin/domain/`:
+The domain_accounting is organized in three layers under `src/main/kotlin/domain_accounting/`:
 
 - **command/**: Event-sourced aggregates that process commands and produce events
 - **read/**: Read models providing views/projections for queries  
 - **term/**: Domain vocabulary including operations, resources, policies, and values
 
 ### Workflow Layer
-- **Workflows**: Pure functions that orchestrate domain commands with infrastructure effects
+- **Workflows**: Pure functions that orchestrate domain_accounting commands with infrastructure effects
 - **Dependency injection via functions**: Effects are passed as function parameters, not interfaces
 - **Request/Response pattern**: Uses data classes like `RegisterJournalEntryRequest`
 
@@ -55,8 +55,10 @@ The domain is organized in three layers under `src/main/kotlin/domain/`:
    
 2. **Error Handling**: 
    - Result type pattern using `kotlin-result` library
-   - No exceptions in domain logic
+   - No exceptions in domain_accounting logic
    - Explicit error types (e.g., `JournalEntryRegistrationError`)
+   - Option 1: Using binding - most readable
+   - 
 
 3. **Event-Driven**: 
    - Commands produce events (Registered, Corrected, Approved)
@@ -98,13 +100,13 @@ fun registerJournalEntry(
 
 ## Coding Standards
 
-1. Express domain knowledge declaratively through types and structure
+1. Express domain_accounting knowledge declaratively through types and structure
 2. Prefer functions over classes for business logic
 3. Use function parameters instead of interfaces for effects
 4. No comments - let types and function names convey meaning
 5. One business rule = one function
 6. Use Result type for all operations that can fail
-7. Place domain logic in appropriate locations (e.g., companion objects)
+7. Place domain_accounting logic in appropriate locations (e.g., companion objects)
 8. Always ensure builds are green before completing work
 
 ## Testing Patterns

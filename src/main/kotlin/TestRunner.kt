@@ -1,12 +1,12 @@
 import com.github.michaelbull.result.*
 import common.primitive.ID
 import common.primitive.PositiveBigDecimal
-import domain.read.AccountList
-import domain.term.accounting.*
-import domain.term.journal_data.JournalHeader
-import domain.term.journal_data.JournalLine
+import domain_accounting.read.AccountList
+import domain_accounting.term.accounting.*
+import domain_accounting.term.journal_data.JournalHeader
+import domain_accounting.term.journal_data.JournalLine
 import effect.rdb.JournalEntrySnapshot
-import domain.command.journal_entry.JournalEntry
+import domain_accounting.command.journal_entry.JournalEntry
 import workflow.*
 import java.math.BigDecimal
 import java.time.LocalDate

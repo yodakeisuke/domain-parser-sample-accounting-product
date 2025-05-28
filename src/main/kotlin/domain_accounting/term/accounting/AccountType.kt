@@ -1,4 +1,4 @@
-package domain.term.accounting
+package domain_accounting.term.accounting
 
 enum class AccountType(val japaneseName: String) {
     ASSET("資産"),

@@ -1,10 +1,10 @@
 package effect.rdb
 
 import com.github.michaelbull.result.*
-import domain.command.journal_entry.JournalEntry
+import domain_accounting.command.journal_entry.JournalEntry
 import common.primitive.ID
-import domain.term.journal_data.JournalHeader
-import domain.term.journal_data.JournalLine
+import domain_accounting.term.journal_data.JournalHeader
+import domain_accounting.term.journal_data.JournalLine
 import java.time.LocalDate
 
 data class JournalEntrySnapshot(

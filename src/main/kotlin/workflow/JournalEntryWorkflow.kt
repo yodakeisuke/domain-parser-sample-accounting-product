@@ -1,9 +1,9 @@
 package workflow
 
 import com.github.michaelbull.result.*
-import domain.command.journal_entry.JournalEntry
-import domain.term.journal_data.JournalHeader
-import domain.term.journal_data.JournalLine
+import domain_accounting.command.journal_entry.JournalEntry
+import domain_accounting.term.journal_data.JournalHeader
+import domain_accounting.term.journal_data.JournalLine
 
 data class RegisterJournalEntryRequest(
     val header: JournalHeader,
@@ -17,7 +17,7 @@ sealed interface JournalEntryRegistrationError {
 
 internal fun requireExistingAccounts(
     lines: List<JournalLine>,
-    findAccount: (common.primitive.NonEmptyString) -> Result<domain.term.accounting.Account, String>
+    findAccount: (common.primitive.NonEmptyString) -> Result<domain_accounting.term.accounting.Account, String>
 ): Result<List<JournalLine>, String> {
     lines.forEach { line ->
         findAccount(line.account.code).onFailure { error ->
@@ -28,11 +28,10 @@ internal fun requireExistingAccounts(
 }
 
 fun registerJournalEntry(
-    findAccount: (common.primitive.NonEmptyString) -> Result<domain.term.accounting.Account, String>,
+    findAccount: (common.primitive.NonEmptyString) -> Result<domain_accounting.term.accounting.Account, String>,
     deriveEvent: (JournalEntry) -> Result<JournalEntry, String>,
     request: RegisterJournalEntryRequest
 ): Result<JournalEntry.Registered, JournalEntryRegistrationError> {
-    // まず科目の存在チェック
     return requireExistingAccounts(request.lines, findAccount)
         .mapError { JournalEntryRegistrationError.ValidationFailed(it) }
         .andThen { 

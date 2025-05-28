@@ -1,4 +1,4 @@
-package domain.term.accounting
+package domain_accounting.term.accounting
 
 import common.primitive.PositiveBigDecimal
 import java.math.BigDecimal

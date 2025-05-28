@@ -1,7 +1,7 @@
-package domain.read
+package domain_accounting.read
 
-import domain.term.accounting.Account
-import domain.term.accounting.AccountType
+import domain_accounting.term.accounting.Account
+import domain_accounting.term.accounting.AccountType
 import com.github.michaelbull.result.*
 import common.primitive.NonEmptyString
 

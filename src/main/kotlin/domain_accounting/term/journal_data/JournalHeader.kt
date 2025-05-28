@@ -1,4 +1,4 @@
-package domain.term.journal_data
+package domain_accounting.term.journal_data
 
 import common.primitive.ID
 import java.time.LocalDate

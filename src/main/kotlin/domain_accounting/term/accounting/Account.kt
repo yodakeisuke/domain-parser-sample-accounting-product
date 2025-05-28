@@ -1,4 +1,4 @@
-package domain.term.accounting
+package domain_accounting.term.accounting
 
 import com.github.michaelbull.result.*
 import common.primitive.NonEmptyString

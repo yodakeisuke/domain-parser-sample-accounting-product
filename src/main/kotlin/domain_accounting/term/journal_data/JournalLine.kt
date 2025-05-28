@@ -1,10 +1,10 @@
-package domain.term.journal_data
+package domain_accounting.term.journal_data
 
-import domain.term.accounting.Account
-import domain.term.accounting.AccountingAmount
-import domain.term.accounting.AccountType
-import domain.term.accounting.DebitCredit
-import domain.term.accounting.SignNormalization
+import domain_accounting.term.accounting.Account
+import domain_accounting.term.accounting.AccountingAmount
+import domain_accounting.term.accounting.AccountType
+import domain_accounting.term.accounting.DebitCredit
+import domain_accounting.term.accounting.SignNormalization
 import java.math.BigDecimal
 
 data class JournalLine(

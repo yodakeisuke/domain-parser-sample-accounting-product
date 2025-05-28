@@ -1,8 +1,8 @@
-package domain.command.journal_entry
+package domain_accounting.command.journal_entry
 
 import com.github.michaelbull.result.*
-import domain.term.journal_data.JournalHeader
-import domain.term.journal_data.JournalLine
+import domain_accounting.term.journal_data.JournalHeader
+import domain_accounting.term.journal_data.JournalLine
 import common.primitive.ID
 
 // aggregate

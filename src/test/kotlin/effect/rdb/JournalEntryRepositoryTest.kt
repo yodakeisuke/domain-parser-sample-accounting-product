@@ -3,10 +3,10 @@ package effect.rdb
 import com.github.michaelbull.result.*
 import common.primitive.ID
 import common.primitive.PositiveBigDecimal
-import domain.command.journal_entry.JournalEntry
-import domain.term.accounting.*
-import domain.term.journal_data.JournalHeader
-import domain.term.journal_data.JournalLine
+import domain_accounting.command.journal_entry.JournalEntry
+import domain_accounting.term.accounting.*
+import domain_accounting.term.journal_data.JournalHeader
+import domain_accounting.term.journal_data.JournalLine
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal

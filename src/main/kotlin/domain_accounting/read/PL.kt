@@ -1,8 +1,8 @@
-package domain.read.pl
+package domain_accounting.read.pl
 
-import domain.term.journal_data.JournalLine
-import domain.term.accounting.AccountType
-import domain.term.accounting.SignNormalization
+import domain_accounting.term.journal_data.JournalLine
+import domain_accounting.term.accounting.AccountType
+import domain_accounting.term.accounting.SignNormalization
 import java.math.BigDecimal
 
 data class PL(
