@@ -1,0 +1,227 @@
+---
+description: Example of Address term implementation in Kotlin based on natural language documentation
+globs: Address.kt
+---
+# Address Kotlin Implementation Example
+
+## Complete Example: Address.kt
+
+```kotlin
+package domain_order.address
+
+import com.github.michaelbull.result.*
+import common.app_core.Showable
+
+// property
+@JvmInline
+value class DetailedAddress(val value: String)
+
+// value
+sealed class Address: Showable {
+    sealed class Valid : Address() {
+        data class Domestic(
+            val prefecture: Prefecture,
+            val detail: DetailedAddress
+        ) : Valid()
+
+        data class Overseas(
+            val detail: DetailedAddress
+        ) : Valid()
+    }
+
+    data class Invalid(
+        val prefecture: Prefecture?,
+        val detail: DetailedAddress,
+        val reason: String,
+    ) : Address()
+
+    // derived properties
+    fun isDomestic(): Boolean = this is Valid.Domestic
+    fun isValid(): Boolean = this is Valid
+    override fun display() = when (this) {
+        is Valid.Domestic -> "${prefecture.displayName} ${detail.value}"
+        is Valid.Overseas -> "海外 ${detail.value}"
+        is Invalid -> "不正な住所: ${detail.value} (${reason})"
+    }
+    
+    // transition
+    companion object {
+        fun verify(address: Address, inputPrefecture: Prefecture?): Valid {
+            return when (address) {
+                is Valid -> address
+                is Invalid -> createValidAddressFrom(inputPrefecture, address.detail)
+            }
+        }
+        
+        fun from(prefectureInput: String?, detailInput: String): Result<Address, String> {
+            return binding {
+                val detail = parseDetailedAddress(detailInput).bind()
+                val prefectureOption = parsePrefectureInput(prefectureInput).bind()
+                createAddress(prefectureOption, detail).bind()
+            }
+        }
+    }
+}
+
+// business rules
+internal fun parseDetailedAddress(detailInput: String): Result<DetailedAddress, String> {
+    val trimmed = detailInput.trim()
+    return if (trimmed.isEmpty()) {
+        Err("住所詳細が空です")
+    } else {
+        Ok(DetailedAddress(trimmed))
+    }
+}
+
+internal fun parsePrefectureInput(prefectureInput: String?): Result<Prefecture?, String> {
+    val trimmed = prefectureInput.orEmpty().trim()
+    return if (trimmed.isEmpty()) {
+        Ok(null)
+    } else {
+        Prefecture.from(trimmed).map { it }
+    }
+}
+
+internal fun createAddress(prefecture: Prefecture?, detail: DetailedAddress): Result<Address, String> {
+    return Ok(createValidAddressFrom(prefecture, detail))
+}
+
+internal fun createValidAddressFrom(prefecture: Prefecture?, detail: DetailedAddress): Address.Valid {
+    return if (prefecture != null) {
+        Address.Valid.Domestic(prefecture, detail)
+    } else {
+        Address.Valid.Overseas(detail)
+    }
+}
+```
+
+## Implementation Mapping
+
+### 1. 情報構造 → Sealed Class Hierarchy
+
+**Natural Language:**
+```
+- 有効な住所（Valid）
+    - 国内住所（Domestic）
+    - 海外住所（Overseas）
+- 無効な住所（Invalid）
+```
+
+**Kotlin:**
+```kotlin
+sealed class Address {
+    sealed class Valid : Address() {
+        data class Domestic(...) : Valid()
+        data class Overseas(...) : Valid()
+    }
+    data class Invalid(...) : Address()
+}
+```
+
+### 2. ビジネスルール → Internal Functions
+
+**Natural Language:**
+```
+### 住所詳細の検証
+- 住所詳細は必須（空文字は不可）
+- 前後の空白は自動的にトリミング
+```
+
+**Kotlin:**
+```kotlin
+internal fun parseDetailedAddress(detailInput: String): Result<DetailedAddress, String> {
+    val trimmed = detailInput.trim()  // トリミング
+    return if (trimmed.isEmpty()) {   // 空文字チェック
+        Err("住所詳細が空です")
+    } else {
+        Ok(DetailedAddress(trimmed))
+    }
+}
+```
+
+### 3. 状態遷移 → Companion Object Methods
+
+**Natural Language:**
+```mermaid
+Invalid --> Valid.Domestic : verify(都道府県あり)
+Invalid --> Valid.Overseas : verify(都道府県なし)
+```
+
+**Kotlin:**
+```kotlin
+fun verify(address: Address, inputPrefecture: Prefecture?): Valid {
+    return when (address) {
+        is Valid -> address  // Already valid
+        is Invalid -> createValidAddressFrom(inputPrefecture, address.detail)
+    }
+}
+```
+
+### 4. 導出プロパティ → Member Functions
+
+**Natural Language:**
+```
+- isDomestic(): 国内住所かどうかを判定
+- isValid(): 有効な住所かどうかを判定
+```
+
+**Kotlin:**
+```kotlin
+fun isDomestic(): Boolean = this is Valid.Domestic
+fun isValid(): Boolean = this is Valid
+```
+
+## Key Implementation Patterns
+
+### 1. Error Handling with Result
+```kotlin
+fun from(prefectureInput: String?, detailInput: String): Result<Address, String> {
+    return binding {
+        val detail = parseDetailedAddress(detailInput).bind()
+        val prefectureOption = parsePrefectureInput(prefectureInput).bind()
+        createAddress(prefectureOption, detail).bind()
+    }
+}
+```
+
+### 2. Nullable Handling
+```kotlin
+data class Invalid(
+    val prefecture: Prefecture?,  // Marked as nullable in documentation
+    val detail: DetailedAddress,
+    val reason: String,
+) : Address()
+```
+
+### 3. Business Logic Separation
+- Core logic in internal functions
+- State transitions in companion object
+- Derived properties as member functions
+
+### 4. Type Safety
+```kotlin
+// Value class for type safety
+@JvmInline
+value class DetailedAddress(val value: String)
+
+// Exhaustive when expressions
+override fun display() = when (this) {
+    is Valid.Domestic -> ...
+    is Valid.Overseas -> ...
+    is Invalid -> ...
+}
+```
+
+## Implementation Notes
+
+1. **State vs Classification**:
+   - `Valid`/`Invalid` are states (can transition)
+   - `Domestic`/`Overseas` are classifications (fixed types within Valid)
+
+2. **Pure Functions**: All business rules are pure functions returning Result
+
+3. **Immutability**: All data classes are immutable
+
+4. **Error Messages**: Japanese error messages match business language
+
+5. **Validation at Construction**: Validation happens during object creation, not after

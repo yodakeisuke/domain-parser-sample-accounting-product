@@ -1,0 +1,177 @@
+---
+description: Guidelines for parsing domain terms between natural language and Kotlin code
+globs: *.md,*.kt
+---
+# Domain Term Parser Guidelines
+
+## Overview
+This guideline defines how to convert between natural language domain descriptions (*.md) and Kotlin code implementations (*.kt) for domain terms.
+
+## Core Principles
+
+1. **Natural Language First**: The .md file represents the business domain in natural language, free from technical details
+2. **Structural Mapping**: The hierarchical structure in .md maps to sealed class hierarchies in Kotlin
+3. **Behavior Preservation**: Business rules described in natural language map to functions in Kotlin
+
+## Parsing Patterns
+
+### 1. Term Classification/State Pattern
+
+**Natural Language (MD):**
+```markdown
+### Xの分類/状態
+- **分類A/状態A**
+    - プロパティ1
+    - プロパティ2
+- **分類B/状態B**
+    - プロパティ3
+```
+
+**Kotlin Code:**
+```kotlin
+sealed class X {
+    data class A(
+        val property1: Type1,
+        val property2: Type2
+    ) : X()
+    
+    data class B(
+        val property3: Type3
+    ) : X()
+}
+```
+
+### 2. Nested Classification/State Pattern
+
+**Natural Language (MD):**
+```markdown
+- **有効な住所（Valid）**  # 状態のグループ
+    - **国内住所（Domestic）**  # 具体的な状態
+        - 都道府県
+        - 住所詳細
+    - **海外住所（Overseas）**  # 別の具体的な状態
+        - 住所詳細
+```
+
+**Kotlin Code:**
+```kotlin
+sealed class Address {
+    sealed class Valid : Address() {
+        data class Domestic(
+            val prefecture: Prefecture,
+            val detail: DetailedAddress
+        ) : Valid()
+        
+        data class Overseas(
+            val detail: DetailedAddress
+        ) : Valid()
+    }
+}
+```
+
+### 3. Business Rules Pattern
+
+**Natural Language (MD):**
+```markdown
+## ビジネスルール
+### ルール名
+- 条件1
+- 条件2
+```
+
+**Kotlin Code:**
+```kotlin
+// business rules
+internal fun ruleName(params): Result<Type, String> {
+    // implement conditions
+}
+```
+
+### 4. State Transition Pattern
+
+**Natural Language (MD):**
+```markdown
+## 状態遷移
+```mermaid
+stateDiagram-v2
+    [*] --> StateA : action1
+    StateA --> StateB : action2
+```
+
+**Kotlin Code:**
+```kotlin
+companion object {
+    fun action1(...): StateA { ... }
+    fun action2(from: StateA, ...): StateB { ... }
+}
+```
+
+### 5. Derived Properties Pattern
+
+**Natural Language (MD):**
+```markdown
+### 導出プロパティ
+- `propertyName()`: 説明
+```
+
+**Kotlin Code:**
+```kotlin
+fun propertyName(): Type = // implementation based on state
+```
+
+## Mapping Rules
+
+### Term Names
+- Japanese terms in parentheses map to English class/function names
+- Example: "住所（Address）" → `class Address`
+
+### Properties
+- Natural language property descriptions map to typed fields
+- Example: "都道府県" → `val prefecture: Prefecture`
+
+### Optional Properties
+- Properties marked as "nullable" or conditional map to nullable types
+- Example: "都道府県（nullable）" → `val prefecture: Prefecture?`
+
+### Validation Rules
+- "必須" → Non-nullable type with validation
+- "空文字は不可" → Validation function returning Result
+- "自動的にトリミング" → Processing in parse function
+
+## Example: Address Term
+
+### Natural Language Structure
+```
+住所の分類  # このケースは「分類」と「状態」の両方の性質を持つ
+- 有効な住所     # Valid状態
+    - 国内住所（都道府県、住所詳細）
+    - 海外住所（住所詳細）
+- 無効な住所     # Invalid状態
+    （都道府県?, 住所詳細, 理由）
+```
+
+### Kotlin Structure
+```kotlin
+sealed class Address {
+    sealed class Valid : Address() {
+        data class Domestic(prefecture, detail) : Valid()
+        data class Overseas(detail) : Valid()
+    }
+    data class Invalid(prefecture?, detail, reason) : Address()
+}
+```
+
+## Guidelines for Implementation
+
+1. **Start with the .md file** to understand the domain
+2. **Identify if 「分類」 or 「状態」** - classification focuses on types, state focuses on lifecycle
+3. **Map the structure** following the patterns above
+4. **Implement business rules** as separate functions
+5. **Add technical details** only in the .kt file (Result types, etc.)
+6. **Keep the mapping traceable** - each concept in .md should have a clear counterpart in .kt
+
+## Classification vs State
+
+- **分類 (Classification)**: Different types that don't change (e.g., ProductType: Book, Electronics)
+- **状態 (State)**: Different conditions in a lifecycle (e.g., OrderStatus: Pending, Shipped, Delivered)
+- **Both**: Some terms represent both classification and state (e.g., Address: Valid/Invalid are states, Domestic/Overseas are classifications within Valid state)

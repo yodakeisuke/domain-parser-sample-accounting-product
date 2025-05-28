@@ -1,0 +1,136 @@
+---
+description: Sample example of converting JournalEntry Aggregate Design Canvas to Kotlin code
+globs: *.md,*.mdc
+---
+# Sample: JournalEntry Aggregate Conversion
+
+## From Canvas to Code
+
+### Canvas Input (journal-entry-aggregate-design-canvas.md)
+
+**Section 3 - State Transitions:**
+```mermaid
+stateDiagram-v2
+    [*] --> Registered : Register
+    Registered --> Registered : Correct
+    Registered --> Approved : Approve
+    Approved --> [*]
+```
+
+**Section 4 - Enforced Invariants:**
+- 仕訳明細は2行以上存在すること
+- 借方合計と貸方合計が一致すること
+- 承認済み仕訳は訂正不可能であること
+- 各仕訳明細には有効な勘定科目が設定されていること
+
+**Section 5 - Handled Commands & Created Events:**
+| Handled Command | Created Event |
+|----------------|---------------|
+| Register       | Registered    |
+| Correct        | Corrected     |
+| Approve        | Approved      |
+
+### Resulting Kotlin Code
+
+```kotlin
+package domain_accounting.command.journal_entry
+
+import com.github.michaelbull.result.*
+import domain_accounting.term.journal_data.JournalHeader
+import domain_accounting.term.journal_data.JournalLine
+import common.primitive.ID
+
+// Aggregate root
+sealed interface JournalEntry {
+    // Events (States) - from Canvas Section 5 "Created Events"
+    data class Registered(
+        val header: JournalHeader,
+        val lines: List<JournalLine>,
+    ) : JournalEntry
+
+    data class Corrected(
+        val journalId: ID<JournalHeader>,
+        val header: JournalHeader,
+        val lines: List<JournalLine>,
+    ) : JournalEntry
+
+    data class Approved(
+        val journalId: ID<JournalHeader>,
+    ) : JournalEntry
+
+    // Commands - from Canvas Section 5 "Handled Commands"
+    companion object {
+        fun register(
+            header: JournalHeader,
+            lines: List<JournalLine>
+        ): Result<Registered, Rejected> =
+            requireMinimumTwoLines(lines)
+                .andThen { requireBalancedEntry(it) }
+                .map { Registered(header, it) }
+                .mapError { Rejected(header.id, it) }
+
+        fun correct(
+            journal: Registered,  // State constraint from Section 3
+            header: JournalHeader,
+            lines: List<JournalLine>
+        ): Result<Corrected, Rejected> =
+            requireMinimumTwoLines(lines)
+                .andThen { requireBalancedEntry(it) }
+                .map { Corrected(journal.header.id, header, it) }
+                .mapError { Rejected(journal.header.id, it) }
+
+        fun approve(
+            journalId: ID<JournalHeader>
+        ): Approved {
+            return Approved(journalId)
+        }
+    }
+}
+
+// Error types
+sealed interface JournalEntryError
+data class Rejected(
+    val journalId: ID<JournalHeader>,
+    val reason: String,
+) : JournalEntryError
+
+// Business rules - from Canvas Section 4 "Enforced Invariants"
+internal fun requireMinimumTwoLines(
+    lines: List<JournalLine>,
+): Result<List<JournalLine>, String> =
+    if (lines.size >= 2) {
+        Ok(lines)
+    } else {
+        Err("Journal entry must have at least 2 lines (current: ${lines.size})")
+    }
+
+internal fun requireBalancedEntry(
+    lines: List<JournalLine>,
+): Result<List<JournalLine>, String> {
+    val totalDebits = JournalLine.sumDebits(lines)
+    val totalCredits = JournalLine.sumCredits(lines)
+
+    return if (totalDebits == totalCredits) {
+        Ok(lines)
+    } else {
+        Err("Journal entry must balance: debits ($totalDebits) != credits ($totalCredits)")
+    }
+}
+```
+
+## Conversion Notes
+
+1. **State Transitions → Type Constraints**
+   - "Registered → Registered" implemented by `correct` requiring `Registered` parameter
+   - "Approved is terminal" implemented by not having methods that accept `Approved`
+
+2. **Invariants → Validation Functions**
+   - "仕訳明細は2行以上" → `requireMinimumTwoLines`
+   - "借方合計と貸方合計が一致" → `requireBalancedEntry`
+   - "承認済み仕訳は訂正不可能" → No `correct` method accepting `Approved`
+   - "有効な勘定科目" → Enforced by `JournalLine` value object construction
+
+3. **Commands & Events → Methods & Classes**
+   - Each command becomes a companion object method
+   - Each event becomes a data class implementing the aggregate interface
+   - Command methods return `Result<Event, Error>` for explicit error handling

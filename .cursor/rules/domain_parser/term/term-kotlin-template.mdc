@@ -1,0 +1,199 @@
+---
+description: Template for implementing domain terms in Kotlin based on natural language documentation
+globs: *.kt
+---
+# Domain Term Kotlin Implementation Template
+
+## Template Structure
+
+```kotlin
+package domain_[domain_name].[term_package]
+
+import com.github.michaelbull.result.*
+import common.app_core.Showable // if needed
+
+// property (if value class is needed)
+@JvmInline
+value class RelatedValueClass(val value: String)
+
+// value
+sealed class TermName : Showable { // or other interfaces
+    
+    // Classifications/States from 情報構造
+    sealed class Classification1 : TermName() {
+        data class SubClass1(
+            val property1: Type1,
+            val property2: Type2
+        ) : Classification1()
+    }
+    
+    data class Classification2(
+        val property3: Type3,
+        val property4: Type4? // nullable as specified
+    ) : TermName()
+    
+    // derived properties from 導出プロパティ
+    fun propertyName(): ReturnType = // implementation
+    fun anotherProperty(): ReturnType = // implementation
+    
+    // display if Showable
+    override fun display() = when (this) {
+        is Classification1.SubClass1 -> "display format"
+        is Classification2 -> "another format"
+    }
+    
+    // transition methods from 状態遷移
+    companion object {
+        fun action1(...): Result<State1, Error> {
+            // Apply business rules
+            return businessRule1(...)
+                .andThen { businessRule2(it) }
+                .map { State1(...) }
+        }
+        
+        fun action2(from: State1, ...): Result<State2, Error> {
+            // Implementation
+        }
+        
+        // generation methods from 生成と変換
+        fun from(input: InputType): Result<TermName, String> {
+            return binding {
+                val validated = validateInput(input).bind()
+                createTermName(validated).bind()
+            }
+        }
+    }
+}
+
+// business rules from ビジネスルール section
+internal fun businessRule1(param: Type): Result<Type, String> {
+    // Implement conditions from ルール1の名前
+    return if (/* condition1 && condition2 */) {
+        Ok(param)
+    } else {
+        Err("Error message")
+    }
+}
+
+internal fun businessRule2(param: Type): Result<Type, String> {
+    // Implement conditions from ルール2の名前
+    // Include any processing like trimming
+    return Ok(processedValue)
+}
+
+// Helper functions for state creation
+internal fun createTermName(params: Params): Result<TermName, String> {
+    // Implementation based on business rules
+}
+```
+
+## Implementation Guidelines
+
+### 1. Package Structure
+```
+domain_[domain_name]/
+  └── [term_name]/
+      ├── TermName.kt     # Main implementation
+      └── TermName.md     # Natural language documentation
+```
+
+### 2. Mapping from Natural Language
+
+#### 情報構造 → Sealed Class Hierarchy
+- Each indentation level becomes a nested class
+- Bold items become class names
+- Listed properties become constructor parameters
+- "(nullable)" annotation → nullable type (?)
+
+#### ビジネスルール → Functions
+- Each rule subsection → separate function
+- Rule conditions → if/when expressions
+- Return Result for fallible operations
+
+#### 状態遷移 → Companion Object Methods
+- Transition arrows → method names
+- Source state → method parameter (if needed)
+- Target state → return type
+
+#### 導出プロパティ → Member Functions
+- Property name → function name
+- Description guides implementation
+
+### 3. Technical Patterns
+
+#### Error Handling
+```kotlin
+// Use Result type for operations that can fail
+fun operation(): Result<Success, String> = 
+    binding {
+        val step1 = validate(...).bind()
+        val step2 = process(step1).bind()
+        create(step2).bind()
+    }
+```
+
+#### State Transitions
+```kotlin
+// State-specific methods
+sealed class Order {
+    data class Pending(...) : Order() {
+        fun confirm(): Result<Confirmed, Error>
+    }
+    data class Confirmed(...) : Order()
+}
+
+// Or companion object methods
+companion object {
+    fun confirm(order: Pending): Result<Confirmed, Error>
+}
+```
+
+#### Value Objects
+```kotlin
+@JvmInline
+value class NonEmptyString private constructor(val value: String) {
+    companion object {
+        fun of(value: String): Result<NonEmptyString, String> =
+            if (value.isNotBlank()) Ok(NonEmptyString(value))
+            else Err("String cannot be empty")
+    }
+}
+```
+
+### 4. Best Practices
+
+1. **Immutability**: All data classes should be immutable
+2. **Pure Functions**: Business rules as pure functions
+3. **Explicit Errors**: Use Result type instead of exceptions
+4. **Type Safety**: Leverage sealed classes for exhaustive when
+5. **Validation**: Validate at construction time
+6. **Separation**: Keep business logic separate from infrastructure
+
+### 5. Common Patterns
+
+#### Classification Pattern
+```kotlin
+sealed class ProductType {
+    data object Book : ProductType()
+    data object Electronics : ProductType()
+}
+```
+
+#### State Pattern
+```kotlin
+sealed class OrderStatus {
+    data class Pending(val orderId: ID) : OrderStatus()
+    data class Shipped(val orderId: ID, val trackingNumber: String) : OrderStatus()
+}
+```
+
+#### Mixed Classification/State
+```kotlin
+sealed class Address {
+    sealed class Valid : Address() {  // State group
+        data class Domestic(...) : Valid()  // Classification
+        data class Overseas(...) : Valid()  // Classification
+    }
+    data class Invalid(...) : Address()  // Different state
+}
+```

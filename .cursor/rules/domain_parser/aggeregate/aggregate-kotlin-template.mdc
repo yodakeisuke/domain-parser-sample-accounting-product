@@ -1,0 +1,74 @@
+---
+description: Empty template for converting Aggregate Design Canvas to Kotlin code
+globs: *.md,*.mdc
+---
+# Aggregate Kotlin Code Template
+
+```kotlin
+package domain_<domain_name>.command.<aggregate_name>
+
+import com.github.michaelbull.result.*
+import common.primitive.ID
+
+// Aggregate root
+sealed interface <AggregateName> {
+    
+    // Events (States)
+    // TODO: Define event classes based on Canvas Section 5 "Created Events"
+    data class <EventName1>(
+        // TODO: Add necessary properties
+    ) : <AggregateName>
+    
+    data class <EventName2>(
+        // TODO: Add necessary properties
+    ) : <AggregateName>
+    
+    // Commands
+    companion object {
+        // TODO: Define command methods based on Canvas Section 5 "Handled Commands"
+        fun <commandName1>(
+            // TODO: Add parameters
+        ): Result<<EventName1>, <ErrorType>> {
+            // TODO: Apply invariants from Canvas Section 4
+            // TODO: Return new event or error
+        }
+        
+        fun <commandName2>(
+            // TODO: Add parameters including state constraints from Canvas Section 3
+        ): Result<<EventName2>, <ErrorType>> {
+            // TODO: Apply invariants from Canvas Section 4
+            // TODO: Return new event or error
+        }
+    }
+}
+
+// Error types
+sealed interface <AggregateName>Error
+data class <ErrorName>(
+    // TODO: Add error properties
+) : <AggregateName>Error
+
+// Business rules (from Canvas Section 4 "Enforced Invariants")
+// TODO: Implement each invariant as a validation function
+internal fun <invariantName1>(
+    // TODO: Add parameters
+): Result<ValidatedType, String> {
+    // TODO: Implement validation logic
+}
+
+internal fun <invariantName2>(
+    // TODO: Add parameters
+): Result<ValidatedType, String> {
+    // TODO: Implement validation logic
+}
+```
+
+## Template Usage Instructions
+
+1. Replace `<AggregateName>` with the name from Canvas Section 1
+2. Replace `<domain_name>` and `<aggregate_name>` with appropriate package names
+3. Create event classes for each event in Canvas Section 5 "Created Events"
+4. Create command methods for each command in Canvas Section 5 "Handled Commands"
+5. Implement validation functions for each invariant in Canvas Section 4
+6. Add state constraints based on Canvas Section 3 state transition diagram
+7. Define appropriate error types for your domain
