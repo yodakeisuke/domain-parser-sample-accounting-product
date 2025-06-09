@@ -11,8 +11,8 @@ In this approach, we express an aggregate as a "union type of events" where even
 
 ## Quick Start
 
-- **Empty Template**: [aggregate-kotlin-template.mdc](aggregate-kotlin-template.mdc) - Use this as a starting point
-- **Complete Example**: [aggregate-kotlin-sample-journalentry.mdc](aggregate-kotlin-sample-journalentry.mdc) - See a full conversion example
+- **Empty Template**: [aggregate-kotlin-template.mdc](kotlin/aggregate-kotlin-template.mdc) - Use this as a starting point
+- **Complete Example**: [aggregate-kotlin-sample-journalentry.mdc](kotlin/aggregate-kotlin-sample-journalentry.mdc) - See a full conversion example
 
 ## Core Concepts
 
