@@ -50,4 +50,16 @@ gradle-app.setting
 !gradle-wrapper.properties
 
 # Cache of project
-.gradletasknamecache 
+.gradletasknamecache
+
+### Environment ###
+.env
+.env.local
+.env.*.local
+
+### Node.js ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log* 

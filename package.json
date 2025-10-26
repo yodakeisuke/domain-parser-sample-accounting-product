@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@ax-llm/ax": "^14.0.37"
+  }
+}

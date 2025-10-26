@@ -30,9 +30,9 @@ sealed interface JournalEntry {
             lines: List<JournalLine>
         ): Result<Registered, Rejected> =
             requireMinimumTwoLines(lines)
-                .andThen { requireBalancedEntry(it) }
-                .map { Registered(header, it) }
-                .mapError { Rejected(header.id, it) }
+            .andThen { requireBalancedEntry(it) }
+            .map { Registered(header, it) }
+            .mapError { Rejected(header.id, it) }
 
         fun correct(
             journal: Registered,
